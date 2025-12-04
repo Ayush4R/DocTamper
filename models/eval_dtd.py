@@ -191,7 +191,7 @@ model = seg_dtd('',2).cuda()
 model = torch.nn.DataParallel(model)
 
 def eval_net_dtd(model, test_data, plot=False,device='cuda'):
-    train_loader1 = DataLoader(dataset=test_data, batch_size=6, num_workers=12, shuffle=False)
+    train_loader1 = DataLoader(dataset=test_data, batch_size=6, num_workers=0, shuffle=False)
     LovaszLoss_fn=LovaszLoss(mode='multiclass')
     SoftCrossEntropy_fn=SoftCrossEntropyLoss(smooth_factor=0.1)
     ckpt = torch.load(args.pth,map_location='cpu')
