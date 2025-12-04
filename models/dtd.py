@@ -78,7 +78,6 @@ class ConvBlock(nn.Module):
         self.dwconv = nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim)
         self.norm = LayerNorm(dim, eps=1e-6)
         self.pwconv1 = nn.Linear(dim, 4 * dim)
-        self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * dim, dim)
         self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True) if layer_scale_init_value > 0 else None
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
@@ -89,7 +88,7 @@ class ConvBlock(nn.Module):
         x = x.permute(0, 2, 3, 1)
         x = self.norm(x)
         x = self.pwconv1(x)
-        x = self.act(x)
+        x = F.gelu(x)
         x = self.pwconv2(x)
         if self.gamma is not None:
             x = self.gamma * x
@@ -291,8 +290,8 @@ class MID(nn.Module):
 class DTD(SegmentationModel):
     def __init__(self, encoder_name = "resnet18", decoder_channels = (384, 192, 96, 64), classes = 1):
         super().__init__()
-        self.vph = torch.load('vph_imagenet.pt')
-        self.swin = torch.load('swin_imagenet.pt')
+        self.vph = torch.load('vph_imagenet.pt', weights_only=False)
+        self.swin = torch.load('swin_imagenet.pt', weights_only=False)
         self.fph = FPH()
         self.decoder = MID(encoder_channels=(96, 192, 384, 768), decoder_channels=decoder_channels)
         self.segmentation_head = SegmentationHead(in_channels=decoder_channels[-1], out_channels=classes, upsampling=2.0)
